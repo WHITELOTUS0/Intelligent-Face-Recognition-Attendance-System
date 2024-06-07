@@ -2,3 +2,6 @@
 __pycache__
 database
 shape_predictor_68_face_landmarks.dat
+.venv
+*.json
+.env
