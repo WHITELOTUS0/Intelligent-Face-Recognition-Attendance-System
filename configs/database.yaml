@@ -1,6 +1,6 @@
 teacher:
   password_hash: <enter-your-teacher-login-hash>
 firebase:
-  databaseURL: <enter-your-databaseURL>
-  storageBucket: <enter-your-storageBucket>
-  pathToServiceAccount: <enter-your-serviceAccountKey-path>
+  databaseURL: 
+  storageBucket: 
+  pathToServiceAccount: 
