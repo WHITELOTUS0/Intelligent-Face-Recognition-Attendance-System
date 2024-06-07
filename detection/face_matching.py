@@ -7,7 +7,7 @@ from deepface import DeepFace
 from scipy.spatial.distance import cosine
 
 # Path to the shape predictor file
-datFile = "/Users/turhancan97/Library/CloudStorage/OneDrive-AnadoluÜniversitesi-AÖF/Side Projetcs/Others/Güncel Projeler/Face_Recognition_App/Intelligent-Face-Recognition-Attendance-System/detection/shape_predictor_68_face_landmarks.dat"
+datFile = "./shape_predictor_68_face_landmarks.dat"
 
 # Load the cascade
 face_cascade = cv2.CascadeClassifier(
