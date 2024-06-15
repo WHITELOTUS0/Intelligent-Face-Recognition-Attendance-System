@@ -1,9 +1,11 @@
 deepface==0.0.79
 dlib==19.21.1
 firebase_admin==4.0.0
-Flask==1.1.2
+Flask==2.1.0
 numpy==1.19.5
 opencv_python==4.8.0.74
 Pillow==10.0.0
 scipy==1.7.1
-Werkzeug==1.0.1
+Werkzeug==2.0
+PyYAML
+urllib3<2
