@@ -48,6 +48,7 @@
             <th>Email</th>
             <th>Type</th>
             <th>Classes and Attendance</th>
+            <th>Last Updated</th>
         </tr>
         {% for student in students.values() %}
             <tr>
@@ -55,11 +56,17 @@
                 <td>{{ student[1] }}</td>
                 <td>{{ student[2] }}</td>
                 <td>
-                    {% for class_, attendance in student[3].items() %}
-                        {{ class_ }}: {{ attendance }}<br>
+                    {% for class_, info in student[3].items() %}
+                        {{ class_ }}: {{ info['attendance'] }}<br>
+                    {% endfor %}
+                </td>
+                <td>
+                    {% for class_, info in student[3].items() %}
+                        {{ info['last_updated'] }}<br>
                     {% endfor %}
                 </td>
             </tr>
+            <a href="/attendance/report" target="_blank">Download Attendance Report</a>
         {% endfor %}
     </table>
 </body>

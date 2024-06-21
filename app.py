@@ -1,5 +1,5 @@
 #app.py
-from flask import Flask, render_template
+from flask import Flask, render_template, make_response
 from flask import request, redirect, url_for, Response, flash
 from werkzeug.security import check_password_hash
 from werkzeug.utils import secure_filename
@@ -13,6 +13,8 @@ from firebase_admin import storage
 from detection.face_matching import detect_faces, align_face
 from detection.face_matching import extract_features, match_face
 from utils.configuration import load_yaml
+from datetime import datetime
+from fpdf import FPDF
 
 config_file_path = load_yaml("configs/database.yaml")
 
@@ -77,7 +79,7 @@ def match_with_database(img, database):
             # Align the face
             aligned_face = align_face(img, face)
 
-            # Extract features from the face
+            # Extract features from the faceF
             embedding = extract_features(aligned_face)
 
             embedding = embedding[0]["embedding"]
@@ -267,6 +269,9 @@ def submit_info():
         embedding = extract_features(aligned_face)
         break
 
+    # Get current timestamp
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    
     # Add the information to the database
     ref = db.reference("Students")
     data = {
@@ -274,7 +279,7 @@ def submit_info():
             "name": name,
             "email": email,
             "userType": userType,
-            "classes": {class_: int("0") for class_ in classes},
+            "classes": {class_: {"attendance": 0, "last_updated": current_time} for class_ in classes},
             "password": password,
             "embeddings": embedding[0]["embedding"],
         }
@@ -324,6 +329,8 @@ def select_class():
         ref = db.reference("Students")
         # Obtain the last studentId number from the database
         number_student = len(ref.get())
+        
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         for i in range(1, number_student):
             studentInfo = db.reference(f"Students/{i}").get()
@@ -332,9 +339,10 @@ def select_class():
                 print(studentInfo["classes"])
                 if selected_class in studentInfo["classes"]:
                     # Update the attendance in the database
-                    ref.child(f"{i}/classes/{selected_class}").set(
-                        int(studentInfo.get("classes", {}).get(selected_class)) + 1
+                    ref.child(f"{i}/classes/{selected_class}/attendance").set(
+                        int(studentInfo.get("classes", {}).get(selected_class, {}).get("attendance", 0)) + 1
                     )
+                    ref.child(f"{i}/classes/{selected_class}/last_updated").set(current_time)
                     # Render the template, passing the detection result and image URL
                     return f'<h2>Selected Class: {selected_class} - {detection}</h2><img src="{url}" alt="Recognized face">'
                 else:
@@ -342,6 +350,78 @@ def select_class():
     else:
         # Render the select class page
         return render_template("select_class.html")
+
+
+@app.route('/attendance/report')
+def attendance_report():
+    class PDF(FPDF):
+        def header(self):
+            self.set_font('Arial', 'B', 12)
+            self.cell(0, 10, 'Attendance Report', 0, 1, 'C')
+
+        def footer(self):
+            self.set_y(-15)
+            self.set_font('Arial', 'I', 8)
+            self.cell(0, 10, f'Page {self.page_no()}', 0, 0, 'C')
+
+        def chapter_title(self, num, label):
+            self.set_font('Arial', '', 12)
+            self.cell(0, 10, f'{num} : {label}', 0, 1)
+
+        def chapter_body(self, body):
+            self.set_font('Arial', '', 12)
+            self.multi_cell(0, 10, body)
+
+    # Create instance of FPDF class
+    pdf = PDF()
+    pdf.add_page()
+
+    pdf.set_font("Arial", size=12)
+    pdf.cell(200, 10, txt="Attendance Details", ln=True, align='C')
+
+    # Add a line break
+    pdf.ln(10)
+
+    # Fetch students data from Firebase
+    ref = db.reference("Students")
+    students = ref.get()
+
+    # Table header
+    pdf.cell(40, 10, 'Name', 1, 0, 'C')
+    pdf.cell(40, 10, 'Email', 1, 0, 'C')
+    pdf.cell(30, 10, 'Type', 1, 0, 'C')
+    pdf.cell(60, 10, 'Classes', 1, 0, 'C')
+    pdf.cell(30, 10, 'Attendance', 1, 0, 'C')
+    pdf.cell(60, 10, 'Last Updated', 1, 1, 'C')  # New line after header
+
+    # Iterate over each student
+    for student_id, student in enumerate(students[1:], start=1):  # Start from index 1, ignoring the null element
+        pdf.cell(40, 10, student['name'], 1, 0)
+        pdf.cell(40, 10, student['email'], 1, 0)
+        pdf.cell(30, 10, student['userType'], 1, 0)
+        
+        # Format classes and attendance
+        class_details = ', '.join([f"{cls}: {details['attendance']}" for cls, details in student.get('classes', {}).items()])
+        pdf.cell(60, 10, class_details, 1, 0)  # Classes and attendance
+        
+        # Format last updated
+        last_updated_details = ', '.join([f"{cls}: {details['last_updated']}" for cls, details in student.get('classes', {}).items()])
+        pdf.cell(60, 10, last_updated_details, 1, 0)  # Last updated
+
+        pdf.ln()  # Move to the next line for the next student
+
+    # Save the pdf with name .pdf
+    pdf_output = "Attendance_Report.pdf"
+    pdf.output(pdf_output)
+
+    # Send the PDF as a response
+    with open(pdf_output, "rb") as f:
+        pdf_data = f.read()
+
+    response = make_response(pdf_data)
+    response.headers['Content-Type'] = 'application/pdf'
+    response.headers['Content-Disposition'] = f'inline; filename={pdf_output}'
+    return response
 
 
 def gen_frames():

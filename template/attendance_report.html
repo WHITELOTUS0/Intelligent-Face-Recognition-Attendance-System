@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Attendance Report</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>Attendance Report</h1>
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Type</th>
+            <th>Classes and Attendance</th>
+            <th>Last Updated</th>
+        </tr>
+        {% for student in students %}
+            <tr>
+                <td>{{ student.name }}</td>
+                <td>{{ student.email }}</td>
+                <td>{{ student.userType }}</td>
+                <td>
+                    {% for class, info in student.classes.items() %}
+                        {{ class }}: {{ info.attendance }}<br>
+                    {% endfor %}
+                </td>
+                <td>
+                    {% for class, info in student.classes.items() %}
+                        {{ info.last_updated }}<br>
+                    {% endfor %}
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
