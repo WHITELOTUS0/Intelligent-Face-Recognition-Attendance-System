@@ -9,3 +9,4 @@ scipy==1.7.1
 Werkzeug==2.0
 PyYAML
 urllib3<2
+python-dotenv
