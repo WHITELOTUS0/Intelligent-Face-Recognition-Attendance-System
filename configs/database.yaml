@@ -1,5 +1,5 @@
 teacher:
-  password_hash: <enter-your-teacher-login-hash>
+  password_hash: 
 firebase:
   databaseURL: 
   storageBucket: 
