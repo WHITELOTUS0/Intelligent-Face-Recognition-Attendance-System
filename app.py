@@ -1,7 +1,7 @@
 #app.py
 from flask import Flask, render_template, make_response
 from flask import request, redirect, url_for, Response, flash
-from werkzeug.security import check_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 import os
 import cv2
@@ -106,40 +106,123 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 @app.route("/")
 def home():
-    return render_template("home.html")
+    return render_template("welcome.html")
 
+@app.route("/teacher")
+def teacher():
+    return render_template("teacher.html")
+
+@app.route("/student")
+def student():
+    return render_template("student.html")
+
+@app.route("/take_attendance")
+def take_attendance():
+    return render_template("take_attendance.html")
 
 @app.route("/add_info")
 def add_info():
     return render_template("add_info.html")
 
+@app.route("/teacher_register", methods=["GET", "POST"])
+def teacher_register():
+    if request.method == "POST":
+        name = request.form.get("name")
+        email = request.form.get("email")
+        classes = request.form.getlist("classes")
+        password = request.form.get("password")
+        
+        # Hash the password for security
+        hashed_password = generate_password_hash(password)
+
+        # Prepare the data to be saved
+        teacher_data = {
+            "name": name,
+            "email": email,
+            "classes": classes,
+            "password": hashed_password
+        }
+
+        # Save the data to Firebase
+        ref = db.reference("Teachers")
+        ref.push(teacher_data)
+
+        flash("Registration successful! Please login.")
+        return redirect(url_for("teacher_login"))
+    return render_template("teacher_register.html")
+
+@app.route("/student_login", methods=["GET", "POST"])
+def student_login():
+    if request.method == "POST":
+        email = request.form.get("email")
+        password = request.form.get("password")
+
+        # Retrieve all students from Firebase
+        ref = db.reference("Students")
+        students = ref.get()
+
+        if students:
+            # Iterate through the list of students
+            for student in students:
+                if student and isinstance(student, dict) and student.get("email") == email and student.get("password") == password:
+                    # Authentication successful
+                    flash("Login successful!")
+                    # Redirect to a student-specific page or dashboard
+                    return redirect(url_for("take_attendance"))
+        
+        # Authentication failed
+        flash("Incorrect email or password")
+    return render_template("student_login.html")
+
+@app.route("/student_register")
+def student_register():
+    return render_template("home.html")
 
 @app.route("/teacher_login", methods=["GET", "POST"])
 def teacher_login():
     if request.method == "POST":
+        email = request.form.get("email")
         password = request.form.get("password")
-        if check_password_hash(TEACHER_PASSWORD_HASH, password):
-            return redirect(url_for("attendance"))
-        else:
-            flash("Incorrect password")
+
+        # Retrieve all teachers from Firebase
+        ref = db.reference("Teachers")
+        teachers = ref.get()
+
+        # Check each teacher's email and password
+        for teacher_id, teacher in teachers.items():
+            if teacher["email"] == email and check_password_hash(teacher["password"], password):
+                # Authentication successful
+                flash("Login successful!")
+                return redirect(url_for("attendance"))
+        
+        # Authentication failed
+        flash("Incorrect email or password")
     return render_template("teacher_login.html")
 
 
 @app.route("/attendance")
 def attendance():
     ref = db.reference("Students")
-    number_student = len(ref.get())
-    # attandence
+    students_data = ref.get()
+
+    # Check if students_data is None or empty
+    if not students_data:
+        flash("No attendance data available.")
+        return render_template("attendance.html", students={})
+
+    # If there is data, process it
     students = {}
-    for i in range(1, number_student):
-        studentInfo = db.reference(f"Students/{i}").get()
-        students[i] = [
-            studentInfo["name"],
-            studentInfo["email"],
-            studentInfo["userType"],
-            studentInfo["classes"],
-        ]
+    for index, student_info in enumerate(students_data):
+        if student_info and isinstance(student_info, dict):
+            students[index] = [
+                student_info.get("name"),
+                student_info.get("email"),
+                student_info.get("userType"),
+                student_info.get("classes"),
+            ]
+
     return render_template("attendance.html", students=students)
+
 
 
 @app.route("/upload", methods=["POST"])

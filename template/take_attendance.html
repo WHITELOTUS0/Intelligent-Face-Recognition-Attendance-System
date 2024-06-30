@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Face Recognition</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+        }
+        #header {
+            background-color: #333;
+            color: white;
+            padding: 10px 0;
+            text-align: center;
+        }
+        #header img {
+            height: 60px;
+        }
+        #header h1 {
+            display: inline;
+            margin-left: 20px;
+            vertical-align: middle;
+        }
+        #left-column {
+            float: left;
+            width: 25%;
+            padding: 20px;
+        }
+        #right-column {
+            float: right;
+            width: 65%;
+            padding: 20px;
+        }
+        .video-container {
+            position: relative;
+            width: 100%;
+            padding-top: 60%;
+            overflow: hidden;
+        }
+        #video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        #footer {
+            clear: both;
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 10px 0;
+            position: fixed;
+            width: 33.5%;
+            bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="header">
+        <img src="https://github.com/turhancan97/Intelligent-Face-Recognition-Attendance-System/assets/22428774/bb426a99-bd13-410d-a21c-e402850af561" alt="Logo">
+        <h1>Welcome to our Face Detection System for our University Attendance System</h1>
+    </div>
+
+    <div id="left-column">
+        
+        <button id="recognize-button">Take Attendance</button>
+        
+    </div>
+    
+    <div id="right-column">
+        
+        <div class="video-container">
+            <iframe id="video" src="/video_feed"></iframe>
+        </div>
+    </div>
+
+    <div id="footer">
+        <p>Project by: Group 4</p>
+        <p>Powered by: Python, Flask, OpenCV, Firebase</p>
+    </div>
+
+    <script>
+        document.getElementById('recognize-button').addEventListener('click', function() {
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '/recognize', true);
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    // Redirect to the select class page
+                    window.location.href = '/select_class';
+                }
+            };
+            xhr.send();
+        });
+
+    </script>    
+
+    <script>
+        document.getElementById('capture-button').addEventListener('click', function() {
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '/capture', true);
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    // Change the location of the window object to the success page
+                    window.location.href = '/add_info';
+                }
+            };
+            xhr.send();
+        });
+    </script>
+</body>
+</html>
