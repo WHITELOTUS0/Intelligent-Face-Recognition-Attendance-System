@@ -56,6 +56,21 @@
             width: 33.5%;
             bottom: 0;
         }
+        #timetable {
+            margin-top: 20px;
+        }
+        #timetable table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        #timetable th, #timetable td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        #timetable th {
+            background-color: #f2f2f2;
+        }
     </style>
 </head>
 <body>
@@ -65,13 +80,37 @@
     </div>
 
     <div id="left-column">
-        
         <button id="recognize-button">Take Attendance</button>
         
+        <div id="timetable">
+            <h2>Timetable</h2>
+            <table>
+                <tr>
+                    <th>Day</th>
+                    <th>Classes</th>
+                </tr>
+                <!-- Replace this with Flask template code to iterate over timetable -->
+                {% if timetable %}
+                    {% for day, classes in timetable.items() %}
+                        <tr>
+                            <td>{{ day }}</td>
+                            <td>
+                                <ul>
+                                    {% for class, time in classes.items() %}
+                                        <li>{{ class }}: {{ time }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr><td colspan="2">No timetable available.</td></tr>
+                {% endif %}
+            </table>
+        </div>
     </div>
     
     <div id="right-column">
-        
         <div class="video-container">
             <iframe id="video" src="/video_feed"></iframe>
         </div>
@@ -90,21 +129,6 @@
                 if (xhr.status === 200) {
                     // Redirect to the select class page
                     window.location.href = '/select_class';
-                }
-            };
-            xhr.send();
-        });
-
-    </script>    
-
-    <script>
-        document.getElementById('capture-button').addEventListener('click', function() {
-            var xhr = new XMLHttpRequest();
-            xhr.open('POST', '/capture', true);
-            xhr.onload = function() {
-                if (xhr.status === 200) {
-                    // Change the location of the window object to the success page
-                    window.location.href = '/add_info';
                 }
             };
             xhr.send();

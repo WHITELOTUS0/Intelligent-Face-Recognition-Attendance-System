@@ -118,7 +118,9 @@ def student():
 
 @app.route("/take_attendance")
 def take_attendance():
-    return render_template("take_attendance.html")
+    ref = db.reference("Timetable")
+    timetable = ref.get()
+    return render_template("take_attendance.html", timetable=timetable)
 
 @app.route("/add_info")
 def add_info():
